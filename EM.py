@@ -46,7 +46,6 @@ def input_data(name, row, type_data):	#type_set=1 -- user_rating.txt	type_set=2 
 			for j in range(0, len(temp)):	
 				if '\n' in temp:				#delete data contain ''
 					i = i + 1
-					print m
 					break
 				init_data[m-i, j] = temp[j]
 		if type_data == 3:
@@ -84,77 +83,92 @@ def input_data(name, row, type_data):	#type_set=1 -- user_rating.txt	type_set=2 
 			if j == row - 1:
 				content_file.write('\n')
 
-	
-
 					
-def process_contents(n, init_data):
+def process_contents(init_data):
 	temp = []
 	for x in xrange(0,len(init_data)):
-		temp.append(init_data[x, 1])
+		temp.append(init_data[x, 0])
 	contents = set(temp)
 	contents = list(contents)
-	save = []
+	save_content = []
 	counter = collections.Counter(temp)
 	n = 0
 	for item in contents:
 		if counter[item] >= 200:
-			save.append(item)
+			save_content.append(item)
 			n = n + counter[item]
+	data_save1 = np.zeros((n, 6))	
 	index = 0
-	init_data1 = np.zeros((n, 3))	
-	for item in save:
-		count = 0
-		for i in xrange(0, len(init_data)):
-			if item == init_data[i, 1] :
-				count = count + 1
-				print item
-				for j in xrange(0, 3):
-					init_data1[index, j] = init_data[i, j]
-				index = index + 1
-				if count == counter[item] : break
-	return len(init_data1), init_data1
+	for i in xrange(0, len(init_data)):
+		print "%d : %d" %(i, len(init_data))
+		if counter[init_data[i, 0]] >= 200:
+			for j in xrange(0, 6):
+				data_save1[index, j] = init_data[i, j]
+			index = index + 1
+	# for item in save_content:
+	# 	count = 0
+	# 	print format(count/len(save_content), '.2%')
+	# 	for i in xrange(0, len(init_data)):
+	# 		if init_data[i, 0] == item:
+	# 			count = count + 1
+	# 			for j in xrange(0, 6):
+	# 				data_save1[index, j] = init_data[i, j]
+	# 			index = index + 1
+	# 			if count == counter[item] : break
+	# content_file = open('dataset/temp_rating.txt', 'w')
+	# for i in xrange(0, len(init_data1)):
+	# 	for j in xrange(0, 6):
+	# 		content_file.write(str(int(data_save1[i, j])) + " ")
+	# 		if j == 5:
+	# 			content_file.write('\n')
+	return save_content, data_save1
 
-def process_users(n, init_data):
+def process_users(init_data):
 	temp = []
 	for x in xrange(0,len(init_data)):
-		temp.append(init_data[x, 0])
+		temp.append(init_data[x, 1])
 	users = set(temp)
 	users = list(users)
-	save = []
+	save_users = []
 	counter = collections.Counter(temp)
 	n = 0
 	for item in users:
 		if counter[item] >= 10:
-			save.append(item)
+			save_users.append(item)
 			n = n + counter[item]
+	data_save2 = np.zeros((n, 6))	
 	index = 0
-	init_data1 = np.zeros((n, 3))	
-	for item in save:
-		count = 0
-		for i in xrange(0, len(init_data)):
-			if item == init_data[i, 0] :
-				count = count + 1
-				print item
-				for j in xrange(0, 3):
-					init_data1[index, j] = init_data[i, j]
-				index = index + 1
-				if count == counter[item] : break
+	for i in xrange(0, len(init_data)):
+		print "%d : %d" %(i, len(init_data))
+		if counter[init_data[i, 1]] >= 10:
+			for j in xrange(0, 6):
+				data_save2[index, j] = init_data[i, j]
+			index = index + 1
+	# for item in save_users:
+	# 	count = 0
+	# 	for i in xrange(0, len(init_data)):
+	# 		if item == init_data[i, 1] :
+	# 			count = count + 1
+	# 			print item
+	# 			for j in xrange(0, 6):
+	# 				init_data1[index, j] = init_data[i, j]
+	# 			index = index + 1
+	# 			if count == counter[item] : break
 
-	content_file = open('data.txt', 'w')
-	for i in xrange(0, len(init_data1)):
-		for j in xrange(0, 3):
-			k = ''.join(str(int(init_data1[i, j])))
-			content_file.write(k+' ')
-			if j == 2:
-				content_file.write('\n')
-	return save
+	# content_file = open('data.txt', 'w')
+	# for i in xrange(0, len(data_save2)):
+	# 	for j in xrange(0, 3):
+	# 		k = ''.join(str(int(data_save2[i, j])))
+	# 		content_file.write(k+' ')
+	# 		if j == 2:
+	# 			content_file.write('\n')
+	return save_users, data_save2
 
 def update_user_list(save, name):
 	users_len, users_data = input_data(name)
 	temp_0 = []
  	for x in xrange(0, users_len):
 		temp_0.append(users_data[x, 0])
-	#users_list = set(temp_0)
 	counter_users = collections.Counter(temp_0)
 	n = 0 
 	for item in save:
@@ -205,18 +219,27 @@ def update_user_list(save, name):
 
 		
 
-def data():
-	data_file = open("data.txt", 'r')
+def data(filename, row):
+	data_file = open(filename, 'r')
 	n = len(data_file.readlines())
-	data = np.zeros((n, 3))
+	data = np.zeros((n, row))
 	m = -1
-	data_file = open("data.txt", 'r')
+	data_file = open(filename, 'r')
 	for line in data_file:
 		m = m + 1
 		temp = str(line).split()
-		for j in range(0, 3):
+		for j in range(0, row):
 			data[m, j] = temp[j]
-	return n, data
+	return data
+
+def write_data(init_data, n, filename):
+	content_file = open(filename, 'w')
+	for i in xrange(0, len(init_data)):
+		for j in xrange(0, n):
+			content_file.write(str(int(init_data[i, j])) + " ")
+			if j == n - 1:
+				content_file.write('\n')
+	
 
 # def Soc_inf(Arfa, Ru, ):
 # 	# lamuda
@@ -235,12 +258,35 @@ def data():
 
 # def M_step():
 # 	return #L'(seita) = 0 
-file1 = str("dataset/user_rating.txt")
-file2 = str("dataset/mc.txt")
-file3 = str("dataset/rating.txt")
-#input_data(file2, 3, 2)
-#input_data(file1, 3, 1)
-input_data(file3, 6, 3)
-# init_len1, init_data1 = process_contents(init_len, init_data)
-# save = process_users(init_len1, init_data1)
-# update_user_list(save, file2)
+
+def main():
+	file1 = str("dataset/user_rating.txt")
+	file2 = str("dataset/mc.txt")
+	file3 = str("dataset/rating.txt")
+	# input_data(file1, 3, 1)
+	# input_data(file2, 3, 2)
+	# input_data(file3, 6, 3)
+	file_init1 = str("dataset/init_user_rating.txt")
+	file_init2 = str("dataset/init_mc.txt")
+	file_init3 = str("dataset/init_rating.txt")
+	file_init4 = str("dataset/temp_rating.txt")
+	to_process_contents = data(file_init3, 6)
+	contents_list, temp_contents = process_contents(to_process_contents)
+	users_list, temp_users = process_users(temp_contents)
+	while len(temp_contents) != len(temp_users):
+		contents_list, temp_contents = process_contents(temp_users)
+		users_list, temp_users = process_users(temp_contents)
+	print "process over!"
+	save_name1 = str("dataset/final_rating.txt")
+	save_name2 = str("dataset/final_contents_list.txt")
+	save_name3 = str("dataset/final_users_list.txt")
+	write_data(temp_users, 6, save_name1)
+	#write_data(contents_list, 1, save_name2)
+	#write_data(users_list, 1, save_name3)
+
+
+
+
+if __name__ == '__main__': main()
+
+

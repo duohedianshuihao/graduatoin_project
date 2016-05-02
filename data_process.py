@@ -176,23 +176,43 @@ def write_data(init_data, n, filename):
     
 def split_rating(init_data):
     n = len(init_data)
-    temp = []
-    COUNT = int(n*0.2)
+    temp_article = []
+    temp_day = []
+    for i in xrange(0, n):
+        temp_article.append(init_data[i, 0])
+        temp_day.append(init_data[i, 3])
+    COUNT = int(n*0.4)
     list_article = []
     list_index = []
+    list_day = []
     list_all = range(0, n)
     counter = 0
+    time_day = {}
+    time_article = {}
+    day = list(set(temp_day))
+    article = list(set(temp_article))
+    for i in xrange(0, len(day)):
+        time_day[day[i]] = 0
+    for i in xrange(0, len(article)):
+        time_article[article[i]] = 0
+    counter_day = collections.Counter(temp_day)
+    counter_article = collections.Counter(temp_article)
     while counter <= COUNT:
-        tempInt = random.randint(0, n)
+        print counter, COUNT
+        tempInt = random.randint(0, n-1)
         if tempInt not in list_index:
-            list_index.append(tempInt)
-            list_article.append(init_data[tempInt, 0])
-            counter = counter + 1
-    for i in xrange(0, n):
-        temp.append(init_data[i, 0])
-    if len(list(set(temp))) == len(list(set(list_article))) :
-        print "list satisfied!"
-    else: 
+            if time_day[init_data[tempInt, 3]]+1 < counter_day[init_data[tempInt, 3]] and time_article[init_data[tempInt, 0]]+1 < counter_article[init_data[tempInt, 0]]:
+                time_day[init_data[tempInt, 3]] = time_day[init_data[tempInt, 3]] + 1
+                time_article[init_data[tempInt, 0]] = time_article[init_data[tempInt, 0]] + 1
+                list_day.append(init_data[tempInt, 3])             
+                list_index.append(tempInt)
+                list_article.append(init_data[tempInt, 0])
+                counter = counter + 1
+
+    if len(article) == len(list(set(list_article))):
+        print 'article satisfied'
+    else:
+        print 'article error'
         split_rating(init_data)
     data_refer = np.zeros((len(list_article), 6))
     data_exp = np.zeros((n - len(list_article), 6))
@@ -208,6 +228,22 @@ def split_rating(init_data):
         index = index + 1
     print len(data_refer), len(data_exp)
     return data_refer, data_exp
+    
+def sort_date(init_data):
+    n = len(init_data)
+    date_list = []
+    index_list = []
+    new_data = np.zeros((n, 4))
+    map(lambda i: date_list.append(init_data[i, 3]), [i for i in xrange(0, n)])
+    temp = sorted(enumerate(date_list), key = lambda x : x[1])
+    for item in temp:
+        index_list.append(item[0])
+    index = 0
+    for item in index_list:
+        new_data[index, :] = init_data[item, 0:4]
+        index = index + 1
+    return new_data
+        
     
                             
             
@@ -247,6 +283,9 @@ def main():
     data_refer, data_exp = split_rating(rating_data)
     write_data(data_refer, 6, file_result_refer)
     write_data(data_exp, 6, file_result_exp)
+    sort_data = data(file_result_exp, 6)
+    new_data = sort_date(sort_data)
+    write_data(new_data, 4, file_result_exp)
 
     
     

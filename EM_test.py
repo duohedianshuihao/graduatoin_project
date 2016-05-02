@@ -46,9 +46,10 @@ def main(Sigma,Mu1,Mu2,k,N,iter_num,Epsilon):
         Old_Mu = copy.deepcopy(Mu)   # Mu is a two arguments array, so it has to use deepcopy, rather than copy  
         e_step(Sigma,k,N)  
         m_step(k,N)  
+        print i
         if sum(abs(Mu-Old_Mu))< Epsilon: 
-            print i
             print Expectations  
+            print Mu
             break  
 
 if __name__ == '__main__':

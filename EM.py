@@ -1,4 +1,5 @@
 from __future__ import division
+from multiprocessing import Pool
 import random
 import math 
 import numpy as np
@@ -63,13 +64,13 @@ class Initialize(object):
         for line in data_exp:
             temp = str(line).split()
             article_exp.append(int(temp[0]))
-            day.append(int(temp[3]))
+            day.append(int(temp[2]))
         data_refer = open(self.file_refer)
         for line in data_refer:
             temp = str(line).split()
             article_refer.append(int(temp[0]))
-            day_refer.append(int(temp[3]))
-            day.append(int(temp[3]))
+            day_refer.append(int(temp[2]))
+            day.append(int(temp[2]))
         day_count = collections.Counter(day)
         k0_result = np.zeros((len(set(article_exp)), len(set(day))))
         k0_dict = {}                # use the ID of article and the day to locate the K0
@@ -149,7 +150,7 @@ class Initialize(object):
             temp = line.split()
             event[index, 0] = int(temp[0])
             event[index, 1] = int(temp[1])
-            event[index, 2] = int(temp[3])
+            event[index, 2] = int(temp[2])
             index = index + 1
         p = np.zeros((n+1, n+1))
         print 'data DONE'
@@ -170,6 +171,7 @@ class ECM(object):
     def E_step(self):
         global p, Aerfa, Ru, rl, rw
         def calculate_j(j):
+            print j, len(p)
             def calculate_i(i):
                 if i == 0:
                     temp = Ru[self.user_dict[self.event[j, 1]]] * self.k0[self.k0_dict[self.event[j, 0]], self.day_dict[self.event[j, 2]]]
@@ -186,7 +188,6 @@ class ECM(object):
                         p[j, i] = (temp1 + temp2)*math.exp(-1*(temp3 + temp4))
             map(calculate_i, [i for i in xrange(0, len(p))])
         map(calculate_j, [j for j in xrange(1, len(p))])
-            
 
     def C_step(self):
         global p, Z
@@ -228,39 +229,7 @@ class ECM(object):
                     
             
             
-        def calculate_z(i):
-            
-
-            
-
-    # def Optimizing():
         
-        
-        
-        
-
-
-
-            
-
-                                              
-
-
-
-
-
-
-
-# def E_step():
-
-
-# def C_step():
-
-
-# def M_step():
-
-
-# def write_result():
 
     
 def main():
@@ -271,5 +240,7 @@ def main():
     Event = initialize.init_data()
     ecm = ECM(sim_Dict, sim_O, k0_Dict, k0, day_Dict, user_Dict, Event)
     ecm.E_step()
+    ecm.C_step()
+    ecm.M_step()
 
 if __name__ == '__main__': main()

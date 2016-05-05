@@ -85,87 +85,109 @@ def input_data(name, row, type_data):   #type_set=1 -- user_rating.txt  type_set
                 content_file.write('\n')
 
                     
-def process_contents(init_data):
+def process_contents(init_data, step):
+    global n, index
     temp = []
-    for x in xrange(0,len(init_data)):
-        temp.append(init_data[x, 0])
+    map(lambda x: temp.append(init_data[x, 0]), [x for x in range(0, len(init_data))])
     contents = set(temp)
     contents = list(contents)
     save_content = []
     counter = collections.Counter(temp)
     n = 0
-    for item in contents:
-        if counter[item] >= 200:
+    def f_list(item):
+        global n
+        if counter[item] >=268:
             save_content.append(item)
-            n = n + counter[item]
-    data_save1 = np.zeros((n, 6))   
+            n += counter[item]
+    map(f_list, [item for item in contents])   
+    data_save1 = np.zeros((n, 3))
     index = 0
-    for i in xrange(0, len(init_data)):
-        print "%d : %d" %(i, len(init_data))
-        if counter[init_data[i, 0]] >= 200:
-            for j in xrange(0, 6):
-                data_save1[index, j] = init_data[i, j]
-            index = index + 1
+    if step == 0:
+        def f_data(i):
+            global index
+            print i, len(init_data)
+            if counter[init_data[i, 0]] >=268:
+                data_save1[index, 0] = init_data[i, 0]
+                data_save1[index, 1] = init_data[i, 1]
+                data_save1[index, 2] = init_data[i, 3]
+                index += 1
+        map(f_data, [i for i in range(0, len(init_data))])
+    elif step ==1:
+        def f_data(i):
+            global index
+            print i, len(init_data)
+            if counter[init_data[i, 0]] >=268:
+                data_save1[index, :] = init_data[i, :]
+                index += 1
+        map(f_data, [i for i in range(0, len(init_data))])
     return save_content, data_save1
 
 
 def process_users(init_data):
+    global n, index
     temp = []
-    for x in xrange(0,len(init_data)):
-        temp.append(init_data[x, 1])
+    map(lambda x: temp.append(init_data[x, 1]), [x for x in range(0, len(init_data))])
     users = set(temp)
     users = list(users)
     save_users = []
     counter = collections.Counter(temp)
     n = 0
-    for item in users:
+    def f_list(item):
+        global n
         if counter[item] >= 10:
             save_users.append(item)
-            n = n + counter[item]
-    data_save2 = np.zeros((n, 6))   
+            n += counter[item]
+    map(f_list, [item for item in users])            
+    data_save2 = np.zeros((n, 3))   
     index = 0
-    for i in xrange(0, len(init_data)):
-        print "%d : %d" %(i, len(init_data))
+    def f_data(i):
+        global index
+        print i, len(init_data)
         if counter[init_data[i, 1]] >= 10:
-            for j in xrange(0, 6):
-                data_save2[index, j] = init_data[i, j]
-            index = index + 1
+            data_save2[index, :] = init_data[i, :]
+            index += 1
+    map(f_data, [i for i in range(0, len(init_data))])
     return save_users, data_save2
 
 
 def update_dataset(init_data, users_list, contents_list, dataset_type):
+    global index
     final_data = np.zeros((len(init_data), 3))
     index = 0
-    for i in xrange(0, len(init_data)):
+    def f(i):
+        global index
         print "%d : %d" %(i, len(init_data))
         if dataset_type == 1:               # dataset_type = 1 means the init_user_rating.txt
             if init_data[i, 0] in users_list and init_data[i, 1] in users_list:
-                for j in xrange(0, 3):
-                    final_data[index, j] = init_data[i, j]
+                final_data[index, :] = init_data[i, 0:3]
                 index = index + 1
         elif dataset_type == 2:             # dataset_type = 2 means the init_mc.txt
             if init_data[i, 0] in contents_list and init_data[i, 1] in users_list:
-                for j in xrange(0, 3):
-                    final_data[index, j] = init_data[i, j]
+                final_data[index, :] = init_data[i, 0:3]
                 index = index + 1
+    map(f, [i for i in range(0, len(init_data))])
+    print 'update over'
     return final_data   
 
 def data(filename, row):                # read the data from file
+    global m
     data_file = open(filename, 'r')
     n = len(data_file.readlines())
     data = np.zeros((n, row))
-    m = -1
     data_file = open(filename, 'r')
-    for line in data_file:
-        m = m + 1
+    m = -1
+    def assign(line):
+        global m
+        m += 1
         temp = str(line).split()
-        for j in range(0, row):
-            data[m, j] = temp[j]
+        data[m, :] = temp[:]
+    map(assign, [line for line in data_file])
+    print 'read %s over' % filename
     return data
 
 def write_data(init_data, n, filename):
     content_file = open(filename, 'w')
-    for i in xrange(0, len(init_data)):
+    def write(i):
         for j in xrange(0, n):
             if int(init_data[i, 0]) == 0:           # even there might be some useless options...
                 break
@@ -173,14 +195,18 @@ def write_data(init_data, n, filename):
                 content_file.write(str(int(init_data[i, j])) + " ")
                 if j == n - 1:
                     content_file.write('\n')
+    map(write, [i for i in range(0, len(init_data))])
+    print 'write %s over' % filename
     
 def split_rating(init_data):
+    global index, index_1
     n = len(init_data)
     temp_article = []
     temp_day = []
-    for i in xrange(0, n):
+    def f(i):
         temp_article.append(init_data[i, 0])
-        temp_day.append(init_data[i, 3])
+        temp_day.append(init_data[i, 2])
+    map(f, [i for i in range(0, n)])
     COUNT = int(n*0.4)
     list_article = []
     list_index = []
@@ -201,47 +227,50 @@ def split_rating(init_data):
         print counter, COUNT
         tempInt = random.randint(0, n-1)
         if tempInt not in list_index:
-            if time_day[init_data[tempInt, 3]]+1 < counter_day[init_data[tempInt, 3]] and time_article[init_data[tempInt, 0]]+1 < counter_article[init_data[tempInt, 0]]:
-                time_day[init_data[tempInt, 3]] = time_day[init_data[tempInt, 3]] + 1
+            if time_day[init_data[tempInt, 2]]+1 < counter_day[init_data[tempInt, 2]] and time_article[init_data[tempInt, 0]]+1 < counter_article[init_data[tempInt, 0]]:
+                time_day[init_data[tempInt, 2]] = time_day[init_data[tempInt, 2]] + 1
                 time_article[init_data[tempInt, 0]] = time_article[init_data[tempInt, 0]] + 1
-                list_day.append(init_data[tempInt, 3])             
+                list_day.append(init_data[tempInt, 2])             
                 list_index.append(tempInt)
                 list_article.append(init_data[tempInt, 0])
                 counter = counter + 1
-
     if len(article) == len(list(set(list_article))):
         print 'article satisfied'
     else:
         print 'article error'
         split_rating(init_data)
-    data_refer = np.zeros((len(list_article), 6))
-    data_exp = np.zeros((n - len(list_article), 6))
+    data_refer = np.zeros((len(list_article), 3))
+    data_exp = np.zeros((n - len(list_article), 3))
     index = 0
-    for item in list_index:
-        for j in xrange(0, 6):
-            data_refer[index, j] = init_data[item, j]
+    def refer(item):
+        global index
+        data_refer[index, :] = init_data[item, :]
         index = index + 1
-    index = 0
-    for item in list(set(list_all)-set(list_index)):
-        for j in xrange(0, 6):
-            data_exp[index, j] = init_data[item, j]
-        index = index + 1
+    map(refer, [item for item in list_index])
+    index_1 = 0
+    def exp(item):
+        global index_1
+        data_exp[index_1, :] = init_data[item, :]
+        index_1 = index_1 + 1
+    map(exp, [item for item in list(set(list_all)-set(list_index))])
     print len(data_refer), len(data_exp)
     return data_refer, data_exp
     
 def sort_date(init_data):
+    global index
     n = len(init_data)
     date_list = []
     index_list = []
-    new_data = np.zeros((n, 4))
-    map(lambda i: date_list.append(init_data[i, 3]), [i for i in xrange(0, n)])
+    new_data = np.zeros((n, 3))
+    map(lambda i: date_list.append(init_data[i, 2]), [i for i in xrange(0, n)])
     temp = sorted(enumerate(date_list), key = lambda x : x[1])
-    for item in temp:
-        index_list.append(item[0])
+    map(lambda item: index_list.append(item[0]), [item for item in temp])
     index = 0
-    for item in index_list:
-        new_data[index, :] = init_data[item, 0:4]
-        index = index + 1
+    def assign(item):
+        global index
+        new_data[index, :] = init_data[item, :]
+        index += 1
+    map(assign, [item for item in index_list])
     return new_data
         
     
@@ -250,43 +279,48 @@ def sort_date(init_data):
         
 
 def main():
-    # file1 = str("dataset/user_rating.txt")
-    # file2 = str("dataset/mc.txt")
-    # file3 = str("dataset/rating.txt")
-    # input_data(file1, 3, 1)
-    # input_data(file2, 3, 2)
-    # input_data(file3, 6, 3)
-    # file_init1 = str("dataset/init_user_rating.txt")
-    # file_init2 = str("dataset/init_mc.txt")
-    # file_init3 = str("dataset/init_rating.txt")
-    # to_process_contents = data(file_init3, 6)
-    # contents_list, temp_contents = process_contents(to_process_contents)
-    # users_list, temp_users = process_users(temp_contents)
-    # while len(temp_contents) != len(temp_users):
-    #     contents_list, temp_contents = process_contents(temp_users)
-    #     users_list, temp_users = process_users(temp_contents)
-    # print "process over!"
-    # save_name1 = str("dataset/final_user_rating.txt")
-    # save_name2 = str("dataset/final_mc.txt")
-    # save_name3 = str("dataset/final_rating.txt")
-    # write_data(temp_users, 6, save_name1)
-    # data_set_1 = data(file_init1, 3)            # the user_rating.txt
-    # data_set_2 = data(file_init2, 3)            # the mc.txt
-    # temp_data_1 = update_dataset(data_set_1, users_list, contents_list, 1)      #update the users lists in dataset user_rating
-    # write_data(temp_data_1, 3, save_name1)
-    # temp_data_2 = update_dataset(data_set_2, users_list, contents_list, 2)      #update the users and contents lists in dataset mc
-    # write_data(temp_data_2, 3, save_name2)
+    file1 = str("dataset/user_rating.txt")
+    file2 = str("dataset/mc.txt")
+    file3 = str("dataset/rating.txt")
+    input_data(file1, 3, 1)
+    input_data(file2, 3, 2)
+    input_data(file3, 6, 3)
+    file_init1 = str("dataset/init_user_rating.txt")
+    file_init2 = str("dataset/init_mc.txt")
+    file_init3 = str("dataset/init_rating.txt")
+    to_process_contents = data(file_init3, 6)
+    contents_list, temp_contents = process_contents(to_process_contents, 0)
+    users_list, temp_users = process_users(temp_contents)
+    while len(temp_contents[:, 0]) != len(temp_users[:, 0]):
+        print "*" * 10
+        print len(temp_contents[:, 0]), len(temp_users[:, 0])
+        time.sleep(2)
+        contents_list, temp_contents = process_contents(temp_users, 1)
+        users_list, temp_users = process_users(temp_contents)
+    print "process over!"
+    save_name1 = str("dataset/final_user_rating.txt")
+    save_name2 = str("dataset/final_mc.txt")
+    save_name3 = str("dataset/final_rating.txt")
+    write_data(temp_users, 3, save_name3)
+    data_set_1 = data(file_init1, 3)            # the user_rating.txt
+    data_set_2 = data(file_init2, 3)            # the mc.txt
+    data_temp = data(save_name3, 3)
+    contents_list, users_list = data_temp[:, 0], data_temp[:, 1]
+    temp_data_1 = update_dataset(data_set_1, users_list, contents_list, 1)      #update the users lists in dataset user_rating
+    write_data(temp_data_1, 3, save_name1)
+    temp_data_2 = update_dataset(data_set_2, users_list, contents_list, 2)      #update the users and contents lists in dataset mc
+    write_data(temp_data_2, 3, save_name2)
+
     file_process = str("dataset/final_rating.txt")
     file_result_refer = str("dataset/final_rating_refer.txt")
     file_result_exp = str("dataset/final_rating_exp.txt")
-    rating_data = data(file_process, 6)
+    rating_data = data(file_process, 3)
     data_refer, data_exp = split_rating(rating_data)
-    write_data(data_refer, 6, file_result_refer)
-    write_data(data_exp, 6, file_result_exp)
-    sort_data = data(file_result_exp, 6)
+    write_data(data_refer, 3, file_result_refer)
+    write_data(data_exp, 3, file_result_exp)
+    sort_data = data(file_result_exp, 3)
     new_data = sort_date(sort_data)
-    write_data(new_data, 4, file_result_exp)
-
+    write_data(new_data, 3, file_result_exp)
     
     
 if __name__ == '__main__': main()
